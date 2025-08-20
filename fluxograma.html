@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluxograma Interativo com IA - Engenharia de Petróleo (UDESC)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-color: #f4f4f5; /* Cinza claro */
+            --card-color: #ffffff;
+            --border-color: #d4d4d8;
+            --text-color: #18181b;
+            --text-muted-color: #71717a;
+            --accent-color: #006633; /* Verde UDESC */
+            --accent-highlight-color: #00994d; /* Verde UDESC mais claro */
+            --line-color: #a1a1aa;
+            --line-highlight-color: #00994d;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            overscroll-behavior-x: contain;
+        }
+        .fluxograma-container {
+            display: flex;
+            gap: 1rem;
+            padding: 2rem;
+            overflow-x: auto;
+            min-height: 100vh;
+        }
+        .fase-coluna {
+            flex: 0 0 160px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+        .fase-titulo {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--background-color);
+            background-color: var(--accent-color);
+            border-radius: 0.5rem;
+            border: 1px solid var(--accent-color);
+            padding: 0.5rem 1rem;
+            text-align: center;
+            width: 100%;
+        }
+        .disciplina-card {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            width: 100%;
+            height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .disciplina-card:hover {
+            border-color: var(--accent-highlight-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 102, 51, 0.15);
+        }
+        .disciplina-card.highlight,
+        .disciplina-card.highlight-prereq,
+        .disciplina-card.highlight-dep {
+            border-color: var(--accent-highlight-color);
+            box-shadow: 0 4px 10px rgba(0, 102, 51, 0.15);
+        }
+        .disciplina-card.dimmed {
+            opacity: 0.4;
+            filter: grayscale(80%);
+        }
+        #svg-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        svg line {
+            stroke: var(--line-color);
+            stroke-width: 1.5;
+            transition: all 0.2s ease-in-out;
+        }
+        svg line.highlight-prereq {
+            stroke: var(--line-highlight-color);
+            stroke-width: 2.5;
+        }
+        .optativa {
+            background-color: #e4e4e7;
+        }
+        .fluxograma-container::-webkit-scrollbar { height: 8px; }
+        .fluxograma-container::-webkit-scrollbar-track { background: #e4e4e7; }
+        .fluxograma-container::-webkit-scrollbar-thumb { background: #a1a1aa; border-radius: 4px; }
+        .fluxograma-container::-webkit-scrollbar-thumb:hover { background: #71717a; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: var(--background-color);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: all 0.3s ease-in-out;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--accent-color);
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <div class="p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold" style="color: var(--accent-color);">Fluxograma de Engenharia de Petróleo</h1>
+            <p class="text-lg mt-2" style="color: var(--text-muted-color);">Clique em uma disciplina para mais detalhes e insights da IA.</p>
+        </header>
+
+        <div id="fluxograma-wrapper" class="relative">
+            <div id="fluxograma" class="fluxograma-container">
+                <!-- Colunas e disciplinas serão inseridas aqui pelo JavaScript -->
+            </div>
+            <svg id="svg-container"></svg>
+        </div>
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="flex justify-between items-start">
+                <h2 id="modal-title" class="text-2xl font-bold mb-4" style="color: var(--accent-color);">Nome da Disciplina</h2>
+                <button id="modal-close" class="text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-semibold text-lg">Pré-requisitos:</h3>
+                    <p id="modal-prerequisitos" class="text-gray-600">Nenhum</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg">Dependências:</h3>
+                    <p id="modal-dependencias" class="text-gray-600">Nenhuma</p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                 <button id="gemini-button" class="w-full bg-green-700 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-800 transition duration-300 flex items-center justify-center gap-2" style="background-color: var(--accent-color);">
+                    ✨ Gerar Resumo com IA
+                </button>
+            </div>
+
+            <div id="gemini-output-container" class="mt-6 p-4 bg-white rounded-lg border border-gray-200" style="display: none;">
+                <div id="gemini-loading" class="flex justify-center items-center py-4" style="display: none;">
+                    <div class="spinner"></div>
+                </div>
+                <div id="gemini-response" class="text-gray-700 space-y-2"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const disciplinas = [
+            // 1ª Fase
+            { id: 'calc1', nome: 'Cálculo Dif Int I', fase: 1, requisitos: [] },
+            { id: 'intro_eng', nome: 'Introdução Eng Petroleo', fase: 1, requisitos: [] },
+            { id: 'geo_analitica', nome: 'Geometria Analítica', fase: 1, requisitos: [] },
+            { id: 'quim_geral', nome: 'Química Geral', fase: 1, requisitos: [] },
+            { id: 'des_tecnico', nome: 'Desenho Técnico', fase: 1, requisitos: [] },
+            { id: 'quim_exp1', nome: 'Química Exper I', fase: 1, requisitos: [] },
+            { id: 'ciencia_mat', nome: 'Ciencia dos Materiais', fase: 1, requisitos: [] },
+            { id: 'fis_exp1', nome: 'Física Exper I', fase: 1, requisitos: [] },
+            // 2ª Fase
+            { id: 'calc2', nome: 'Cálculo Dif Int II', fase: 2, requisitos: ['calc1'] },
+            { id: 'fisica1', nome: 'Física I', fase: 2, requisitos: ['intro_eng'] },
+            { id: 'alg_linear', nome: 'Álgebra Linear', fase: 2, requisitos: ['geo_analitica'] },
+            { id: 'quim_org1', nome: 'Química Orgânica I', fase: 2, requisitos: ['quim_geral'] },
+            { id: 'est_desc', nome: 'Estatística Descritiva', fase: 2, requisitos: ['des_tecnico'] },
+            { id: 'quim_exp2', nome: 'Química Exper II', fase: 2, requisitos: ['quim_exp1'] },
+            { id: 'fis_exp2', nome: 'Física Exper II', fase: 2, requisitos: ['fis_exp1'] },
+            // 3ª Fase
+            { id: 'calc3', nome: 'Cálculo Dif Int III', fase: 3, requisitos: ['calc2'] },
+            { id: 'fisica2', nome: 'Física II', fase: 3, requisitos: ['fisica1'] },
+            { id: 'geo_geral', nome: 'Geologia Geral', fase: 3, requisitos: ['alg_linear'] },
+            { id: 'quim_org2', nome: 'Química Orgânica II', fase: 3, requisitos: ['quim_org1'] },
+            { id: 'ling_prog1', nome: 'Linguagem Progr. I', fase: 3, requisitos: ['est_desc'] },
+            { id: 'estatica', nome: 'Estática', fase: 3, requisitos: ['quim_exp2'] },
+            { id: 'fis_exp3', nome: 'Física Exper III', fase: 3, requisitos: ['fis_exp2'] },
+            // 4ª Fase
+            { id: 'eq_dif', nome: 'Equações Diferenciais', fase: 4, requisitos: ['calc3'] },
+            { id: 'fisica3', nome: 'Física III', fase: 4, requisitos: ['fisica2'] },
+            { id: 'geo_petroleo', nome: 'Geologia do Petróleo', fase: 4, requisitos: ['geo_geral'] },
+            { id: 'intro_fq', nome: 'Introd Fisico Química', fase: 4, requisitos: ['quim_org2'] },
+            { id: 'met_num1', nome: 'Métodos Numéricos I', fase: 4, requisitos: ['ling_prog1'] },
+            { id: 'res_mat', nome: 'Resist dos Materiais', fase: 4, requisitos: ['estatica'] },
+            { id: 'gestao_lid', nome: 'Gestão e Liderança', fase: 4, requisitos: [] },
+            // 5ª Fase
+            { id: 'mec_fluidos', nome: 'Mecânica Fluidos', fase: 5, requisitos: ['eq_dif'] },
+            { id: 'termo_aplic', nome: 'Termo Aplic Petróleo', fase: 5, requisitos: ['fisica3'] },
+            { id: 'geofisica', nome: 'Geofísica', fase: 5, requisitos: ['geo_petroleo'] },
+            { id: 'instr_med', nome: 'Instr Med Petróleo', fase: 5, requisitos: ['intro_fq'] },
+            { id: 'met_num2', nome: 'Métodos Numéricos II', fase: 5, requisitos: ['met_num1'] },
+            { id: 'geomecanica', nome: 'Geomecânica', fase: 5, requisitos: ['res_mat'] },
+            { id: 'fund_energ', nome: 'Fund Energias Ren', fase: 5, requisitos: ['gestao_lid'] },
+            // 6ª Fase
+            { id: 'maq_fluxo', nome: 'Máquinas de Fluxo', fase: 6, requisitos: ['mec_fluidos'] },
+            { id: 'transf_calor', nome: 'Transf de Calor', fase: 6, requisitos: ['termo_aplic'] },
+            { id: 'est_geol_campo', nome: 'Estudo Geol. de Campo', fase: 6, requisitos: ['geofisica'] },
+            { id: 'eng_reserv1', nome: 'Engenharia Reserv I', fase: 6, requisitos: ['instr_med'] },
+            { id: 'escoa_multi', nome: 'Escoamento Multifásico', fase: 6, requisitos: ['met_num2'] },
+            { id: 'eng_poco1', nome: 'Engenharia de Poço I', fase: 6, requisitos: ['geomecanica'] },
+            { id: 'eng_submarina', nome: 'Engenharia Submarina', fase: 6, requisitos: ['fund_energ'] },
+            // 7ª Fase
+            { id: 'gestao_proj', nome: 'Gestão de Projetos', fase: 7, requisitos: ['maq_fluxo'] },
+            { id: 'transf_massa', nome: 'Transf de Massa', fase: 7, requisitos: ['transf_calor'] },
+            { id: 'sist_contr', nome: 'Sist Contr Automação', fase: 7, requisitos: ['est_geol_campo'] },
+            { id: 'eng_reserv2', nome: 'Engenharia Reserv II', fase: 7, requisitos: ['eng_reserv1'] },
+            { id: 'met_elev', nome: 'Métodos de Elevação', fase: 7, requisitos: ['escoa_multi'] },
+            { id: 'eng_poco2', nome: 'Engenharia de Poço II', fase: 7, requisitos: ['eng_poco1'] },
+            { id: 'proj_int1', nome: 'Projeto Integrado I', fase: 7, requisitos: ['eng_submarina'] },
+            { id: 'econ_petroleo', nome: 'Economia Petróleo', fase: 7, requisitos: [] },
+            // 8ª Fase
+            { id: 'testes_pocos', nome: 'Testes de Poços', fase: 8, requisitos: ['gestao_proj'] },
+            { id: 'proc_prim', nome: 'Processam Prim Petr', fase: 8, requisitos: ['transf_massa'] },
+            { id: 'log_int', nome: 'Logística Integrada', fase: 8, requisitos: ['sist_contr'] },
+            { id: 'sim_reserv', nome: 'Simulação Reservatórios', fase: 8, requisitos: ['eng_reserv2'] },
+            { id: 'garantia_escoa', nome: 'Garantia de Escoamento', fase: 8, requisitos: ['met_elev'] },
+            { id: 'eng_poco3', nome: 'Engenharia de Poço III', fase: 8, requisitos: ['eng_poco2'] },
+            { id: 'proj_int2', nome: 'Projeto Integrado II', fase: 8, requisitos: ['proj_int1'] },
+            { id: 'imp_amb', nome: 'Impactos Ambientais', fase: 8, requisitos: ['econ_petroleo'] },
+            // 9ª Fase
+            { id: 'recup_avanc', nome: 'Fund Recup Avançada', fase: 9, requisitos: ['testes_pocos'] },
+            { id: 'proc_oleo_gas', nome: 'Process Oleo e Gás', fase: 9, requisitos: ['proc_prim'] },
+            { id: 'saude_seg', nome: 'Saude Seg Trabalho', fase: 9, requisitos: ['log_int'] },
+            { id: 'aval_proj', nome: 'Aval Proj Oleo e Gás', fase: 9, requisitos: ['sim_reserv'] },
+            { id: 'gerenc_riscos', nome: 'Gerenc Riscos Amb', fase: 9, requisitos: ['garantia_escoa'] },
+            { id: 'optativa1', nome: 'OPTATIVA', fase: 9, requisitos: [], optativa: true },
+            { id: 'proj_int3', nome: 'Projeto Integrado III', fase: 9, requisitos: ['proj_int2'] },
+            // 10ª Fase
+            { id: 'estagio', nome: 'Estágio Superv', fase: 10, requisitos: ['recup_avanc'] },
+            { id: 'tcc', nome: 'Proj Concl Curso', fase: 10, requisitos: ['proc_oleo_gas'] },
+            { id: 'optativa2', nome: 'OPTATIVA', fase: 10, requisitos: [], optativa: true },
+            { id: 'optativa3', nome: 'OPTATIVA', fase: 10, requisitos: [], optativa: true },
+            { id: 'optativa4', nome: 'OPTATIVA', fase: 10, requisitos: [], optativa: true },
+            { id: 'optativa5', nome: 'OPTATIVA', fase: 10, requisitos: [], optativa: true },
+        ];
+
+        const fluxogramaContainer = document.getElementById('fluxograma');
+        const svgContainer = document.getElementById('svg-container');
+        const wrapper = document.getElementById('fluxograma-wrapper');
+        const numFases = 10;
+        
+        // Modal elements
+        const modal = document.getElementById('info-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalPrerequisitos = document.getElementById('modal-prerequisitos');
+        const modalDependencias = document.getElementById('modal-dependencias');
+        const modalClose = document.getElementById('modal-close');
+        const geminiButton = document.getElementById('gemini-button');
+        const geminiOutputContainer = document.getElementById('gemini-output-container');
+        const geminiLoading = document.getElementById('gemini-loading');
+        const geminiResponse = document.getElementById('gemini-response');
+
+        let currentDisciplina = null;
+
+        // 1. Criar colunas e disciplinas
+        for (let i = 1; i <= numFases; i++) {
+            const coluna = document.createElement('div');
+            coluna.className = 'fase-coluna';
+            coluna.id = `fase-${i}`;
+            const titulo = document.createElement('div');
+            titulo.className = 'fase-titulo';
+            titulo.textContent = `${i}ª fase`;
+            coluna.appendChild(titulo);
+            fluxogramaContainer.appendChild(coluna);
+        }
+        disciplinas.forEach(d => {
+            const coluna = document.getElementById(`fase-${d.fase}`);
+            const card = document.createElement('div');
+            card.className = 'disciplina-card';
+            if (d.optativa) card.classList.add('optativa');
+            card.textContent = d.nome;
+            card.id = d.id;
+            card.dataset.id = d.id;
+            coluna.appendChild(card);
+        });
+
+        // 2. Desenhar linhas
+        function drawLines() {
+            svgContainer.innerHTML = '';
+            const wrapperRect = wrapper.getBoundingClientRect();
+            disciplinas.forEach(d => {
+                if (d.requisitos.length > 0) {
+                    const targetElem = document.getElementById(d.id);
+                    if (!targetElem) return;
+                    const targetRect = targetElem.getBoundingClientRect();
+                    const targetX = targetRect.left + targetRect.width / 2 - wrapperRect.left;
+                    const targetY = targetRect.top + targetRect.height / 2 - wrapperRect.top;
+                    d.requisitos.forEach(reqId => {
+                        const reqElem = document.getElementById(reqId);
+                        if (!reqElem) return;
+                        const reqRect = reqElem.getBoundingClientRect();
+                        const reqX = reqRect.left + reqRect.width / 2 - wrapperRect.left;
+                        const reqY = reqRect.top + reqRect.height / 2 - wrapperRect.top;
+                        const line = document.createElementNS('http://www.w3.0/2000/svg', 'line');
+                        line.setAttribute('x1', reqX);
+                        line.setAttribute('y1', reqY);
+                        line.setAttribute('x2', targetX);
+                        line.setAttribute('y2', targetY);
+                        line.dataset.req = reqId;
+                        line.dataset.dep = d.id;
+                        svgContainer.appendChild(line);
+                    });
+                }
+            });
+        }
+
+        // 3. Lógica de Destaque (Highlight)
+        function highlightPath(disciplinaId) {
+            // ... (código de highlight inalterado)
+        }
+        function clearHighlight() {
+            // ... (código de clear highlight inalterado)
+        }
+
+        // 4. Lógica do Modal
+        function openModal(disciplinaId) {
+            currentDisciplina = disciplinas.find(d => d.id === disciplinaId);
+            if (!currentDisciplina || currentDisciplina.optativa) return;
+
+            modalTitle.textContent = currentDisciplina.nome;
+
+            const prereqs = currentDisciplina.requisitos.map(id => disciplinas.find(d => d.id === id).nome);
+            modalPrerequisitos.textContent = prereqs.length > 0 ? prereqs.join(', ') : 'Nenhum';
+
+            const deps = disciplinas.filter(d => d.requisitos.includes(currentDisciplina.id)).map(d => d.nome);
+            modalDependencias.textContent = deps.length > 0 ? deps.join(', ') : 'Nenhuma';
+            
+            geminiOutputContainer.style.display = 'none';
+            geminiResponse.innerHTML = '';
+
+            modal.classList.add('visible');
+        }
+
+        function closeModal() {
+            modal.classList.remove('visible');
+            currentDisciplina = null;
+        }
+        
+        // 5. Lógica da API Gemini
+        async function callGemini() {
+            if (!currentDisciplina) return;
+
+            geminiOutputContainer.style.display = 'block';
+            geminiLoading.style.display = 'flex';
+            geminiResponse.innerHTML = '';
+            geminiButton.disabled = true;
+
+            const prompt = `Forneça um resumo conciso sobre a disciplina de '${currentDisciplina.nome}' no curso de Engenharia de Petróleo. Descreva seus principais tópicos e sua importância para a formação do engenheiro de petróleo. Formate a resposta em HTML simples com parágrafos.`;
+            
+            try {
+                let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                const payload = { contents: chatHistory };
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    geminiResponse.innerHTML = text.replace(/\n/g, '<br>');
+                } else {
+                    geminiResponse.textContent = "Não foi possível obter um resumo. A resposta da IA estava vazia.";
+                }
+
+            } catch (error) {
+                console.error("Erro ao chamar a API Gemini:", error);
+                geminiResponse.textContent = "Ocorreu um erro ao tentar gerar o resumo. Por favor, tente novamente mais tarde.";
+            } finally {
+                geminiLoading.style.display = 'none';
+                geminiButton.disabled = false;
+            }
+        }
+
+        // 6. Event Listeners
+        fluxogramaContainer.addEventListener('click', (e) => {
+            if (e.target.classList.contains('disciplina-card')) {
+                openModal(e.target.dataset.id);
+            }
+        });
+        
+        modalClose.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        geminiButton.addEventListener('click', callGemini);
+
+
+        // Desenhar linhas ao carregar e redimensionar
+        window.addEventListener('load', () => {
+            setTimeout(drawLines, 100);
+        });
+        new ResizeObserver(drawLines).observe(wrapper);
+
+    </script>
+</body>
+</html>
