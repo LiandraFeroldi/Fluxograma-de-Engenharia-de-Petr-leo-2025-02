@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela de Disciplinas e Pré-Requisitos – Engenharia de Petróleo – 2025/2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-color: #f8fafc;
+            --card-color: #ffffff;
+            --border-color: #e2e8f0;
+            --text-color: #1e293b;
+            --text-muted-color: #64748b;
+            --accent-color: #006633; /* Verde UDESC */
+            
+            /* Cores para cada fase */
+            --fase1-bg: #e6f2e6; --fase1-text: #004d26;
+            --fase2-bg: #e0f2f1; --fase2-text: #004d40;
+            --fase3-bg: #e3f2fd; --fase3-text: #0d47a1;
+            --fase4-bg: #e8eaf6; --fase4-text: #1a237e;
+            --fase5-bg: #ede7f6; --fase5-text: #311b92;
+            --fase6-bg: #fce4ec; --fase6-text: #880e4f;
+            --fase7-bg: #fff3e0; --fase7-text: #e65100;
+            --fase8-bg: #fffde7; --fase8-text: #f57f17;
+            --fase9-bg: #f9fbe7; --fase9-text: #827717;
+            --fase10-bg: #e0f7fa; --fase10-text: #006064;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        .table-row-animated {
+            opacity: 0;
+            transform: translateY(10px);
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fase-tag {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        /* Cores das Fases */
+        .fase-1 { background-color: var(--fase1-bg); color: var(--fase1-text); }
+        .fase-2 { background-color: var(--fase2-bg); color: var(--fase2-text); }
+        .fase-3 { background-color: var(--fase3-bg); color: var(--fase3-text); }
+        .fase-4 { background-color: var(--fase4-bg); color: var(--fase4-text); }
+        .fase-5 { background-color: var(--fase5-bg); color: var(--fase5-text); }
+        .fase-6 { background-color: var(--fase6-bg); color: var(--fase6-text); }
+        .fase-7 { background-color: var(--fase7-bg); color: var(--fase7-text); }
+        .fase-8 { background-color: var(--fase8-bg); color: var(--fase8-text); }
+        .fase-9 { background-color: var(--fase9-bg); color: var(--fase9-text); }
+        .fase-10 { background-color: var(--fase10-bg); color: var(--fase10-text); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <header class="text-center mb-8 table-row-animated" style="animation-delay: 0s;">
+        <h1 class="text-2xl md:text-3xl font-bold" style="color: var(--accent-color);">Tabela de Disciplinas e Pré-Requisitos – 2025/2</h1>
+        <p class="text-lg mt-2" style="color: var(--text-muted-color);">Engenharia de Petróleo</p>
+    </header>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Fase</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Disciplina</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Código</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Pré-Requisitos</th>
+                    </tr>
+                </thead>
+                <tbody id="disciplinas-tbody" class="bg-white divide-y divide-gray-200">
+                    <!-- Linhas da tabela serão inseridas aqui -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const disciplinas = [
+            // Fase 1
+            { fase: 1, nome: "Geometria Analítica", codigo: "1GEOAN36", prerequisitos: "Nenhum" },
+            { fase: 1, nome: "Química Geral", codigo: "1QUIMG36", prerequisitos: "Nenhum" },
+            { fase: 1, nome: "Química Experimental I", codigo: "1QEXPER172", prerequisitos: "Nenhum" },
+            { fase: 1, nome: "Cálculo Diferencial e Integral I", codigo: "1CALC1108", prerequisitos: "Nenhum" },
+            { fase: 1, nome: "Introdução à Engenharia de Petróleo", codigo: "1IENGPET72", prerequisitos: "Nenhum" },
+            { fase: 1, nome: "Desenho Técnico", codigo: "1DESTEC72", prerequisitos: "Nenhum" },
+            // Fase 2
+            { fase: 2, nome: "Física I", codigo: "2FIS172", prerequisitos: "Cálculo Diferencial e Integral I" },
+            { fase: 2, nome: "Álgebra Linear", codigo: "2ALGLIN72", prerequisitos: "Geometria Analítica" },
+            { fase: 2, nome: "Cálculo Diferencial e Integral II", codigo: "2CALC272", prerequisitos: "Cálculo Diferencial e Integral I" },
+            { fase: 2, nome: "Química Orgânica I", codigo: "2QORG136", prerequisitos: "Química Geral" },
+            { fase: 2, nome: "Química Experimental II", codigo: "2QEXPER272", prerequisitos: "Química Experimental I" },
+            { fase: 2, nome: "Física Experimental I", codigo: "2FEXP172", prerequisitos: "Física I (Co-requisito)" },
+            { fase: 2, nome: "Estatística Descritiva", codigo: "2ESTDES36", prerequisitos: "Nenhum" },
+            { fase: 2, nome: "Ciência dos Materiais", codigo: "2CMAT72", prerequisitos: "Nenhum" },
+            // Fase 3
+            { fase: 3, nome: "Física II", codigo: "3FIS272", prerequisitos: "Física I" },
+            { fase: 3, nome: "Física Experimental II", codigo: "3FEXP272", prerequisitos: "Física Experimental I, Física II (Co-requisito)" },
+            { fase: 3, nome: "Geologia Geral", codigo: "3GEOLG54", prerequisitos: "Introdução à Engenharia de Petróleo" },
+            { fase: 3, nome: "Cálculo Diferencial e Integral III", codigo: "3CALC372", prerequisitos: "Cálculo Diferencial e Integral II" },
+            { fase: 3, nome: "Estática", codigo: "3ESTAT72", prerequisitos: "Física I" },
+            { fase: 3, nome: "Linguagem de Programação I", codigo: "3LPROG172", prerequisitos: "Nenhum" },
+            { fase: 3, nome: "Química Orgânica II", codigo: "3QORG236", prerequisitos: "Química Orgânica I" },
+            // Fase 4
+            { fase: 4, nome: "Física Experimental III", codigo: "4FEX372", prerequisitos: "Física Experimental II, Física III (Co-requisito)" },
+            { fase: 4, nome: "Física III", codigo: "4FIS372", prerequisitos: "Física II, Cálculo Diferencial e Integral II" },
+            { fase: 4, nome: "Geologia do Petróleo", codigo: "4GEOPET90", prerequisitos: "Geologia Geral" },
+            { fase: 4, nome: "Equações Diferenciais", codigo: "4EQDIF72", prerequisitos: "Cálculo Diferencial e Integral III" },
+            { fase: 4, nome: "Resistência dos Materiais", codigo: "4RESMAT72", prerequisitos: "Estática" },
+            { fase: 4, nome: "Introdução à Físico-Química", codigo: "4FISQUI36", prerequisitos: "Química Geral" },
+            { fase: 4, nome: "Gestão e Liderança", codigo: "4GLIDER36", prerequisitos: "Nenhum" },
+            { fase: 4, nome: "Métodos Numéricos I", codigo: "4METNUM172", prerequisitos: "Álgebra Linear, Linguagem de Programação I, Cálculo Diferencial e Integral II" },
+            // Fase 5
+            { fase: 5, nome: "Geofísica", codigo: "5GEOF72", prerequisitos: "Geologia do Petróleo" },
+            { fase: 5, nome: "Métodos Numéricos II", codigo: "5METNUM272", prerequisitos: "Métodos Numéricos I, Equações Diferenciais" },
+            { fase: 5, nome: "Mecânica dos Fluidos", codigo: "5MECFLU72", prerequisitos: "Cálculo Diferencial e Integral III, Introdução à Físico-Química" },
+            { fase: 5, nome: "Geomecânica", codigo: "5GEOMEC72", prerequisitos: "Geologia do Petróleo, Resistência dos Materiais" },
+            { fase: 5, nome: "Termodinâmica Aplicada ao Petróleo", codigo: "5TERMPETR72", prerequisitos: "Introdução à Físico-Química, Métodos Numéricos I" },
+            { fase: 5, nome: "Instrumentação e Medição de Petróleo", codigo: "5INSTMED36", prerequisitos: "Nenhum" },
+            { fase: 5, nome: "Fundamentos em Energias Renováveis", codigo: "5ENRENOV36", prerequisitos: "Nenhum" },
+            // Fase 6
+            { fase: 6, nome: "Engenharia de Reservatórios I", codigo: "6ENGRES172", prerequisitos: "Termodinâmica Aplicada ao Petróleo" },
+            { fase: 6, nome: "Engenharia de Poço I", codigo: "6EPOCO172", prerequisitos: "Mecânica dos Fluidos" },
+            { fase: 6, nome: "Transferência de Calor", codigo: "6TRANSCAL72", prerequisitos: "Termodinâmica Aplicada ao Petróleo" },
+            { fase: 6, nome: "Máquinas de Fluxo", codigo: "6MAQFLU72", prerequisitos: "Mecânica dos Fluidos" },
+            { fase: 6, nome: "Engenharia Submarina", codigo: "6ENGSUB36", prerequisitos: "Nenhum" },
+            { fase: 6, nome: "Escoamento Multifásico", codigo: "6ESCMULT72", prerequisitos: "Termodinâmica Aplicada ao Petróleo, Engenharia Submarina (Co-requisito)" },
+            { fase: 6, nome: "Estudo Geológico de Campo", codigo: "6ESTGEOL72", prerequisitos: "Geologia do Petróleo" },
+            // Fase 7
+            { fase: 7, nome: "Engenharia de Poço II", codigo: "7EPOCO272", prerequisitos: "Engenharia de Poço I, Geomecânica" },
+            { fase: 7, nome: "Engenharia de Reservatório II", codigo: "7ENGRES272", prerequisitos: "Engenharia de Reservatórios I" },
+            { fase: 7, nome: "Transferência de Massa", codigo: "7TRANSMAS36", prerequisitos: "Transferência de Calor" },
+            { fase: 7, nome: "Métodos de Elevação", codigo: "7METELEV72", prerequisitos: "Escoamento Multifásico" },
+            { fase: 7, nome: "Sistemas de Controle e Automação", codigo: "7SISCA72", prerequisitos: "Instrumentação e Medição de Petróleo" },
+            { fase: 7, nome: "Projeto Integrado I", codigo: "7PINTEG136", prerequisitos: "Engenharia de Poço II (Co-requisito)" },
+            { fase: 7, nome: "Gestão de Projetos", codigo: "7GPROJ72", prerequisitos: "Nenhum" },
+            { fase: 7, nome: "Economia do Petróleo", codigo: "7ECONPET36", prerequisitos: "Nenhum" },
+            // Fase 8
+            { fase: 8, nome: "Testes de Poços", codigo: "8TPOCOS72", prerequisitos: "Engenharia de Reservatório II" },
+            { fase: 8, nome: "Simulação de Reservatórios", codigo: "8SIMRES72", prerequisitos: "Engenharia de Reservatório II" },
+            { fase: 8, nome: "Engenharia de Poço III", codigo: "8EPOCO372", prerequisitos: "Engenharia de Poço II" },
+            { fase: 8, nome: "Processamento Primário de Petróleo", codigo: "8PPPETR36", prerequisitos: "Transferência de Massa" },
+            { fase: 8, nome: "Impactos Ambientais da Indústria de Óleo e Gás", codigo: "8IMPAMB36", prerequisitos: "Nenhum" },
+            { fase: 8, nome: "Garantia de Escoamento", codigo: "8GARESC72", prerequisitos: "Métodos de Elevação" },
+            { fase: 8, nome: "Projeto Integrado II", codigo: "8PINTEG272", prerequisitos: "Projeto Integrado I, Engenharia de Reservatório II" },
+            { fase: 8, nome: "Logística Integrada", codigo: "8LOGINT36", prerequisitos: "Nenhum" },
+            // Fase 9
+            { fase: 9, nome: "Fundamentos em Recuperação Avançada", codigo: "9RECAVAN36", prerequisitos: "Testes de Poços" },
+            { fase: 9, nome: "Processamento de Óleo e Gás", codigo: "9PROCOG36", prerequisitos: "Processamento Primário de Petróleo" },
+            { fase: 9, nome: "Avaliação de Projetos de Óleo e Gás", codigo: "9AVAPOG72", prerequisitos: "Economia do Petróleo" },
+            { fase: 9, nome: "Saúde e Segurança no Trabalho", codigo: "9SEGTRA72", prerequisitos: "Nenhum" },
+            { fase: 9, nome: "Gerenciamento de Riscos Ambientais", codigo: "9GERRA36", prerequisitos: "Nenhum" },
+            { fase: 9, nome: "Projeto Integrado III", codigo: "9PINTEG372", prerequisitos: "Projeto Integrado II" },
+            // Fase 10
+            { fase: 10, nome: "Estágio Curricular Supervisionado", codigo: "10ESTCUR360", prerequisitos: "70% da grade de ensino" },
+            { fase: 10, nome: "Projeto de Conclusão de Curso", codigo: "10PCC90", prerequisitos: "80% da grade, Engenharia de Poço III, Engenharia de Reservatório II" },
+        ];
+
+        const tbody = document.getElementById('disciplinas-tbody');
+        let delay = 100;
+
+        disciplinas.forEach(d => {
+            const row = document.createElement('tr');
+            row.className = 'table-row-animated';
+            row.style.animationDelay = `${delay}ms`;
+            delay += 30;
+
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="fase-tag fase-${d.fase}">${d.fase}ª Fase</span>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm font-medium text-gray-900">${d.nome}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-500">${d.codigo}</div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="text-sm text-gray-700">${d.prerequisitos.split(',').join(', ')}</div>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    </script>
+</body>
+</html>
